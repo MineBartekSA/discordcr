@@ -35,7 +35,7 @@ module Discord
       pinned: Bool?,
       reactions: Array(Reaction)?,
       nonce: String | Int64?,
-      activity: Activity?
+      activity: MessageActivity?
     )
   end
 
@@ -50,7 +50,7 @@ module Discord
     end
   end
 
-  struct Activity
+  struct MessageActivity
     JSON.mapping(
       type: ActivityType,
       party_id: String?
@@ -118,10 +118,15 @@ module Discord
   struct Overwrite
     JSON.mapping(
       id: Snowflake,
-      type: String,
+      type: OverwriteType,
       allow: Permissions,
       deny: Permissions
     )
+  end
+
+  enum OverwriteType : UInt8
+    Role   = 0
+    Member = 1
   end
 
   struct Reaction

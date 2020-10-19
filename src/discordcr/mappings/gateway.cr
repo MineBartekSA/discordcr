@@ -104,9 +104,9 @@ module Discord
     end
 
     struct StatusUpdatePacket
-      def initialize(status, game, afk, since)
+      def initialize(status, activities, afk, since)
         @op = Discord::Client::OP_STATUS_UPDATE
-        @d = StatusUpdatePayload.new(status, game, afk, since)
+        @d = StatusUpdatePayload.new(status, activities, afk, since)
       end
 
       JSON.mapping(
@@ -117,12 +117,12 @@ module Discord
 
     # :nodoc:
     struct StatusUpdatePayload
-      def initialize(@status, @game, @afk, @since)
+      def initialize(@status, @activities, @afk, @since)
       end
 
       JSON.mapping(
-        status: {type: String?, emit_null: true},
-        game: {type: GamePlaying?, emit_null: true},
+        status: {type: String},
+        activities: {type: Array(Activity)?, emit_null: true},
         afk: Bool,
         since: {type: Int64, nilable: true, emit_null: true}
       )
@@ -367,9 +367,7 @@ module Discord
     struct PresenceUpdatePayload
       JSON.mapping(
         user: PartialUser,
-        roles: Array(Snowflake),
-        game: GamePlaying?,
-        nick: String?,
+        activities: Array(Activity),
         guild_id: Snowflake,
         status: String
       )
@@ -405,6 +403,14 @@ module Discord
         last_pin_timestamp: {type: Time?, converter: MaybeTimestampConverter},
         channel_id: Snowflake
       )
+    end
+
+    struct TooMayRequests
+      include JSON::Serializable
+
+      property message : String
+      property retry_after : String
+      property global : Bool
     end
   end
 end

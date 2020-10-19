@@ -11,7 +11,7 @@ module Discord
   module REST
     SSL_CONTEXT = OpenSSL::SSL::Context::Client.new
     USER_AGENT  = "DiscordBot (https://github.com/discordcr/discordcr, #{Discord::VERSION})"
-    API_BASE    = "https://discordapp.com/api/v6"
+    API_BASE    = "https://discord.com/api/v#{API_VERSION}"
 
     Log = Discord::Log.for("rest")
 
@@ -24,7 +24,6 @@ module Discord
 
       headers["Authorization"] = @token
       headers["User-Agent"] = USER_AGENT
-      headers["X-RateLimit-Precision"] = "millisecond"
 
       request_done = false
       rate_limit_key = {route_key: route_key, major_parameter: major_parameter.try(&.to_u64)}
@@ -46,7 +45,11 @@ module Discord
         Log.debug { "[HTTP IN] BODY: #{response.body}" }
 
         if response.status_code == 429 || response.headers["X-RateLimit-Remaining"]? == "0"
-          retry_after_value = response.headers["X-RateLimit-Reset-After"]? || response.headers["Retry-After"]?
+          retry_after_value = if response.status_code == 429
+            rate_limit = Gateway::TooMayRequests.from_json(response.body).retry_after
+          else
+            response.headers["X-RateLimit-Reset-After"]?
+          end
           retry_after = retry_after_value.not_nil!.to_f
 
           if response.headers["X-RateLimit-Global"]?
@@ -1112,7 +1115,7 @@ module Discord
     def create_guild_ban(guild_id : UInt64 | Snowflake, user_id : UInt64 | Snowflake,
                          delete_message_days : Int32? = nil, reason : String? = nil)
       params = HTTP::Params.build do |form|
-        form.add("delete-message-days", delete_message_days.to_s) if delete_message_days
+        form.add("delete_message_days", delete_message_days.to_s) if delete_message_days
         form.add("reason", reason) if reason
       end
 
@@ -1382,26 +1385,26 @@ module Discord
       )
     end
 
-    # Gets embed data for a guild. Requires the "Manage Guild" permission.
+    # Gets widget data for a guild. Requires the "Manage Guild" permission.
     #
-    # [API docs for this method](https://discordapp.com/developers/docs/resources/guild#get-guild-embed)
-    def get_guild_embed(guild_id : UInt64 | Snowflake)
+    # [API docs for this method](https://discord.com/developers/docs/resources/guild#get-guild-widget)
+    def get_guild_widget(guild_id : UInt64 | Snowflake)
       response = request(
-        :guilds_gid_embed,
+        :guilds_gid_widget,
         guild_id,
         "GET",
-        "/guilds/#{guild_id}/embed",
+        "/guilds/#{guild_id}/widget",
         HTTP::Headers.new,
         nil
       )
 
-      GuildEmbed.from_json(response.body)
+      GuildWidget.from_json(response.body)
     end
 
-    # Modifies embed data for a guild. Requires the "Manage Guild" permission.
+    # Modifies widget data for a guild. Requires the "Manage Guild" permission.
     #
-    # [API docs for this method](https://discordapp.com/developers/docs/resources/guild#modify-guild-embed)
-    def modify_guild_embed(guild_id : UInt64 | Snowflake, enabled : Bool,
+    # [API docs for this method](https://discord.com/developers/docs/resources/guild#modify-guild-widget)
+    def modify_guild_widget(guild_id : UInt64 | Snowflake, enabled : Bool,
                            channel_id : UInt64 | Snowflake)
       json = encode_tuple(
         enabled: enabled,
@@ -1409,15 +1412,15 @@ module Discord
       )
 
       response = request(
-        :guilds_gid_embed,
+        :guilds_gid_widget,
         guild_id,
         "PATCH",
-        "/guilds/#{guild_id}/embed",
+        "/guilds/#{guild_id}/widget",
         HTTP::Headers{"Content-Type" => "application/json"},
         json
       )
 
-      GuildEmbed.from_json(response.body)
+      GuildWidget.from_json(response.body)
     end
 
     # Gets a specific user by ID.

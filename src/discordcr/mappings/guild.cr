@@ -77,7 +77,7 @@ module Discord
     )
   end
 
-  struct GuildEmbed
+  struct GuildWidget
     JSON.mapping(
       enabled: Bool,
       channel_id: Snowflake?
@@ -115,8 +115,8 @@ module Discord
     # :nodoc:
     def initialize(payload : Gateway::PresenceUpdatePayload)
       @user = User.new(payload.user)
-      @nick = payload.nick
-      @roles = payload.roles
+      @nick = nil
+      @roles = Array(Snowflake).new
       # Presence updates have no joined_at or deaf/mute, thanks Discord
     end
 
@@ -244,8 +244,11 @@ module Discord
     )
   end
 
-  struct GamePlaying
-    def initialize(@name = nil, @type : Type? = nil, @url = nil)
+  struct Activity
+    include JSON::Serializable
+
+    def initialize(@name, @type = Type::Playing, @created_at = Time::Time.utc.to_unix, @url = nil, @timestamps = nil, @application_id = nil,
+      @details = nil, @state = nil, @emoji = nil, @party = nil, @assets = nil, @secrets = nil, @instance = nil, @flags = nil)
     end
 
     enum Type : UInt8
@@ -254,19 +257,76 @@ module Discord
       Listening = 2
       Watching  = 3
       Custom    = 4
+      Competing = 5
     end
 
-    JSON.mapping(
-      name: String?,
-      type: Type?,
-      url: String?
-    )
+    property name : String
+    property type : Type
+    property url : String?
+    property created_at : Int64
+    property timestamps : Timestamps?
+    property application_id : Snowflake?
+    property details : String?
+    property state : String?
+    property emoji : ActivityEmoji?
+    property party : ActivityParty?
+    property assets : ActivityAssets?
+    property secrets : ActivitySecrets?
+    property instance : Bool?
+    property flags : Int32?
+  end
+
+  struct Timestamps
+    include JSON::Serializable
+
+    property start : Int64?
+    property end : Int64?
+  end
+
+  struct ActivityEmoji
+    include JSON::Serializable
+
+    property name : String
+    property id : Snowflake?
+    property animated : Bool?
+  end
+
+  struct ActivityParty
+    include JSON::Serializable
+
+    property id : String?
+    property size : Array(Int32)?
+  end
+
+  struct ActivityAssets
+    include JSON::Serializable
+
+    property large_image : String?
+    property large_text : String?
+    property small_image : String?
+    property small_text : String?
+  end
+
+  struct ActivitySecrets
+    include JSON::Serializable
+
+    property join : String?
+    property spectate : String?
+    property match : String?
+  end
+
+  struct ClientStatus
+    include JSON::Serializable
+
+    property desktop : String?
+    property mobile : String?
+    property web : String?
   end
 
   struct Presence
     JSON.mapping(
       user: PartialUser,
-      game: GamePlaying?,
+      activities: Array(Activity),
       status: String
     )
   end

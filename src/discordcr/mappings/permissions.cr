@@ -33,7 +33,7 @@ module Discord
     ManageEmojis        = 1 << 30
 
     def self.new(pull : JSON::PullParser)
-      Permissions.new(pull.read_int.to_u64)
+      Permissions.new(pull.read_string.to_u64)
     end
   end
 end

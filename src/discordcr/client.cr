@@ -95,13 +95,12 @@ module Discord
     # The *intents* value is used to request that only specific events are sent
     # to this client for the current session. For details on what `Intents` values
     # correspond to which gateway events, see the [API docs]().
-    def initialize(@token : String, @client_id : UInt64 | Snowflake | Nil = nil,
+    def initialize(@token : String, @intents : Gateway::Intents, @client_id : UInt64 | Snowflake | Nil = nil,
                    @shard : Gateway::ShardKey? = nil,
                    @large_threshold : Int32 = 100,
                    @compress : CompressMode = CompressMode::Stream,
                    @zlib_buffer_size : Int32 = 10 * 1024 * 1024,
-                   @properties : Gateway::IdentifyProperties = DEFAULT_PROPERTIES,
-                   @intents : Gateway::Intents? = nil)
+                   @properties : Gateway::IdentifyProperties = DEFAULT_PROPERTIES)
       @backoff = 1.0
 
       # Set some default value for the heartbeat interval. This should never
@@ -173,12 +172,8 @@ module Discord
 
     private def initialize_websocket : Discord::WebSocket
       url = URI.parse(get_gateway.url)
-
-      if @compress.stream?
-        path = "#{url.path}/?encoding=json&v=6&compress=zlib-stream"
-      else
-        path = "#{url.path}/?encoding=json&v=6"
-      end
+      path = "#{url.path}/?encoding=json&v=#{API_VERSION}"
+      path += "&compress=zlib-stream" if @compress.stream?
 
       websocket = Discord::WebSocket.new(
         host: url.host.not_nil!,
