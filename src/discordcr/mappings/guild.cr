@@ -266,6 +266,7 @@ module Discord
     end
 
     property name : String?
+    @[JSON::Field(converter: Enum::ValueConverter)]
     property type : Type?
     property url : String?
   end
