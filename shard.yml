@@ -5,5 +5,7 @@ authors:
   - meew0 <blactbt@live.de>
   - Chris Hobbs (RX14) <chris@rx14.co.uk>
   - z64 <zachnowicki@gmail.com>
+  
+crystal: 1.0
 
 license: MIT
