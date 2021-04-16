@@ -38,6 +38,7 @@ module Discord
     property reactions : Array(Reaction)?
     property nonce : String | Int64?
     property activity : Activity?
+    property webhook_id : Snowflake?
   end
 
   enum ActivityType : UInt8
